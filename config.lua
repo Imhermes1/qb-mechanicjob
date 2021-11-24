@@ -72,23 +72,27 @@ Config.Businesses = {
 
 Config.Plates = {
     [1] = {
-        coords = vector4(-340.95, -128.24, 39, 160.46),
+        coords = vector4(-1423.78, -449.92, 35.35, 211.98),
+        AttachedVehicle = nil,
+    },
+    [2] = {
+        coords = vector4(-1417.43, -446.04, 35.35, 211.26),
         AttachedVehicle = nil,
     },
 }
 
 Config.Locations = {
-    ["exit"] = vector3(-339.04, -135.53, 39),
-    ["stash"] = vector3(-323.19, -129.86, 39),
-    ["duty"] = vector3(-344.35, -123.39, 39), 
-    ["vehicle"] = vector4(-370.51, -107.88, 38.35, 72.56), 
+    ["exit"] = vector3(-1427.72, -444.86, 35.94),
+    ["stash"] = vector3(-1418.77, -454.62, 35.91),
+    ["duty"] = vector3(-1429.56, -454.96, 35.91), 
+    ["vehicle"] = vector4(-1408.13, -459.23, 34.48, 125.01), 
 }
 
 Config.Vehicles = {
     ["flatbed"] = "Flatbed",
     ["towtruck"] = "Towtruck",
-    ["minivan"] = "Minivan (Leen Auto)",
-    ["blista"] = "Blista",
+    ["nissantitan17"] = "Nissan Work Truck",
+
 }
 
 Config.MinimalMetersForDamage = {

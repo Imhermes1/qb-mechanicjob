@@ -236,17 +236,17 @@ local function ApplyEffects(vehicle)
             end
 
             if VehicleStatus[plate]["fuel"] <= 80 and (chance >= 81 and chance <= 100) then
-                local fuel = exports['LegacyFuel']:GetFuel(vehicle)
+                local fuel = exports['cc-fuel']:GetFuel(vehicle)
                 if VehicleStatus[plate]["fuel"] <= 80 and VehicleStatus[plate]["fuel"] >= 60 then
-                    exports['LegacyFuel']:SetFuel(vehicle, fuel - 2.0)
+                    exports['cc-fuel']:SetFuel(vehicle, fuel - 2.0)
                 elseif VehicleStatus[plate]["fuel"] <= 59 and VehicleStatus[plate]["fuel"] >= 40 then
-                    exports['LegacyFuel']:SetFuel(vehicle, fuel - 4.0)
+                    exports['cc-fuel']:SetFuel(vehicle, fuel - 4.0)
                 elseif VehicleStatus[plate]["fuel"] <= 39 and VehicleStatus[plate]["fuel"] >= 20 then
-                    exports['LegacyFuel']:SetFuel(vehicle, fuel - 6.0)
+                    exports['cc-fuel']:SetFuel(vehicle, fuel - 6.0)
                 elseif VehicleStatus[plate]["fuel"] <= 19 and VehicleStatus[plate]["fuel"] >= 6 then
-                    exports['LegacyFuel']:SetFuel(vehicle, fuel - 8.0)
+                    exports['cc-fuel']:SetFuel(vehicle, fuel - 8.0)
                 else
-                    exports['LegacyFuel']:SetFuel(vehicle, fuel - 10.0)
+                    exports['cc-fuel']:SetFuel(vehicle, fuel - 10.0)
                 end
             end
         end
@@ -266,170 +266,54 @@ local function SendStatusMessage(statusList)
     end
 end
 
-local function OpenMenu()
-    local OpenMenu = {
-        {
-            header = "Vehicle Options",
-            isMenuHeader = true
-        },
-        {
-            header = "Disconnect Vehicle",
-            txt = "Unattach Vehicle in Lift",
-            params = {
-                event = "qb-mechanicjob:client:UnattachVehicle",
-            }
-        },
-        {
-            header = "Check Status",
-            txt = "Check Vehicle Status",
-            params = {
-                event = "qb-mechanicjob:client:CheckStatus",
-                args = {
-                    number = 1,
-                }
-            }
-        },    
-        {
-            header = "Vehicle Parts",
-            txt = "Repair Vehicle Parts",
-            params = {
-                event = "qb-mechanicjob:client:PartsMenu",
-                args = {
-                    number = 1,
-                }
-            }
-        },
-        
-        {
-            header = "⬅ Close Menu",
-            txt = "",
-            params = {
-                event = "qb-menu:client:closeMenu",
-            }
-        },
-        
-    }
+-- Old Menu Code (being removed)
 
-    exports['qb-menu']:openMenu(OpenMenu)
+function CloseMenu()
+    Menu.hidden = true
+    currentGarage = nil
+    ClearMenu()
 end
 
-local function PartsMenu()
-    local plate = QBCore.Functions.GetPlate(Config.Plates[ClosestPlate].AttachedVehicle)
-    if VehicleStatus[plate] ~= nil then
-        local vehicleMenu = {
-            {
-                header = "Status",
-                isMenuHeader = true
-            }
-        }
-        for k,v in pairs(Config.ValuesLabels) do
-            if math.ceil(VehicleStatus[plate][k]) ~= Config.MaxStatusValues[k] then
-                local percentage = math.ceil(VehicleStatus[plate][k])
-                if percentage > 100 then
-                    percentage = math.ceil(VehicleStatus[plate][k]) / 10
-                end
-                vehicleMenu[#vehicleMenu+1] = {
-                    header = v,
-                    txt = "Status: " .. percentage .. ".0% / 100.0%",
-                    params = {
-                        event = "qb-mechanicjob:client:PartMenu",
-                        args = {
-                            name = v,
-                            parts = k
-                        }
-                    }
-                }
-            else
-                local percentage = math.ceil(Config.MaxStatusValues[k])
-                if percentage > 100 then
-                    percentage = math.ceil(Config.MaxStatusValues[k]) / 10
-                end
-                vehicleMenu[#vehicleMenu+1] = {
-                    header = v,
-                    txt = "Status: " .. percentage .. ".0% / 100.0%",
-                    params = {
-                        event = "qb-mechanicjob:client:NoDamage",
-                    }
-                }
-            end                               
-        end
-        vehicleMenu[#vehicleMenu+1] = {
-            header = "⬅ Close Menu",
-            txt = "",
-            params = {
-                event = "qb-menu:client:closeMenu"
-            }
-    
-        }
-        exports['qb-menu']:openMenu(vehicleMenu)
+function ClearMenu()
+	Menu.GUI = {}
+	Menu.buttonCount = 0
+	Menu.selection = 0
+end
+
+function OpenMenu()
+    ClearMenu()
+    Menu.addButton("Options", "VehicleOptions", nil)
+    Menu.addButton("Close Menu", "CloseMenu", nil)
+end
+
+function VehicleList()
+    ClearMenu()
+    for k, v in pairs(Config.Vehicles) do
+        Menu.addButton(v, "SpawnListVehicle", k)
     end
-
+    Menu.addButton("Close Menu", "CloseMenu", nil)
 end
 
-local function PartMenu(data)
-    local partName = data.name
-    local part = data.parts
-    local TestMenu1 = {
-        {
-            header = "Part Menu",
-            isMenuHeader = true
-        },
-        {
-            header = ""..partName.."",
-            txt = "Repair : "..QBCore.Shared.Items[Config.RepairCostAmount[part].item]["label"].." "..Config.RepairCostAmount[part].costs.."x", 
-            params = {
-                event = "qb-mechanicjob:client:RepairPart",
-                args = {
-                    part = part,
-                }
-            }
-        },
-        {
-            header = "⬅ Back Menu",
-            txt = "Back to parts menu",
-            params = {
-                event = "qb-mechanicjob:client:PartsMenu",
-            }
-        },
-        {
-            header = "⬅ Close Menu",
-            txt = "",
-            params = {
-                event = "qb-menu:client:closeMenu",
-            }
-        },
-        
+function SpawnListVehicle(model)
+    local coords = {
+        x = Config.Locations["vehicle"].x,
+        y = Config.Locations["vehicle"].y,
+        z = Config.Locations["vehicle"].z,
+        w = Config.Locations["vehicle"].w,
     }
 
-    exports['qb-menu']:openMenu(TestMenu1)
+    QBCore.Functions.SpawnVehicle(model, function(veh)
+        SetVehicleNumberPlateText(veh, "ACBV"..tostring(math.random(1000, 9999)))
+        SetEntityHeading(veh, coords.w)
+        exports['cc-fuel']:SetFuel(veh, 100.0)
+        Menu.hidden = true
+        TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
+        TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh))
+        SetVehicleEngineOn(veh, true, true)
+    end, coords, true)
 end
 
-local function NoDamage()
-    local NoDamage = {
-        {
-            header = "No Damage",
-            isMenuHeader = true
-        },
-        {
-            header = "Back Menu",
-            txt = "There Is No Damage To This Part!",
-            params = {
-                event = "qb-mechanicjob:client:PartsMenu",
-            }
-        },
-        {
-            header = "⬅ Close Menu",
-            txt = "",
-            params = {
-                event = "qb-menu:client:closeMenu",
-            }
-        },
-        
-    }
-    exports['qb-menu']:openMenu(NoDamage)
-end
-
-local function UnattachVehicle()
+function UnattachVehicle()
     local coords = Config.Locations["exit"]
     DoScreenFadeOut(150)
     Wait(150)
@@ -443,61 +327,66 @@ local function UnattachVehicle()
     TriggerServerEvent('qb-vehicletuning:server:SetAttachedVehicle', false, ClosestPlate)
 end
 
-local function SpawnListVehicle(model)
-    local coords = {
-        x = Config.Locations["vehicle"].x,
-        y = Config.Locations["vehicle"].y,
-        z = Config.Locations["vehicle"].z,
-        w = Config.Locations["vehicle"].w,
-    }
-
-    QBCore.Functions.SpawnVehicle(model, function(veh)
-        SetVehicleNumberPlateText(veh, "ACBV"..tostring(math.random(1000, 9999)))
-        SetEntityHeading(veh, coords.w)
-        exports['LegacyFuel']:SetFuel(veh, 100.0)
-        TaskWarpPedIntoVehicle(PlayerPedId(), veh, -1)
-        TriggerEvent("vehiclekeys:client:SetOwner", QBCore.Functions.GetPlate(veh))
-        SetVehicleEngineOn(veh, true, true)
-    end, coords, true)
+function VehicleOptions()
+    ClearMenu()
+    Menu.addButton("Disconnect Vehicle", "UnattachVehicle", nil)
+    -- Menu.addButton("Check Status", "CheckStatus", nil)
+    Menu.addButton("Vehicle Parts", "PartsMenu", nil)
+    Menu.addButton("Close Menu", "CloseMenu", nil)
 end
 
-local function VehicleList()
-    local vehicleMenu = {
-        {
-            header = "Vehicle List",
-            isMenuHeader = true
-        }
-    }
-    for k,v in pairs(Config.Vehicles) do
-        vehicleMenu[#vehicleMenu+1] = {
-            header = v,
-            txt = "Vehicle: "..v.."",
-            params = {
-                event = "qb-mechanicjob:client:SpawnListVehicle",
-                args = {
-                    headername = v,
-                    spawnName = k
-                }
-            }
-        }                              
-    end
-    vehicleMenu[#vehicleMenu+1] = {
-        header = "⬅ Close Menu",
-        txt = "",
-        params = {
-            event = "qb-menu:client:closeMenu"
-        }
-
-    }
-    exports['qb-menu']:openMenu(vehicleMenu)
-end
-
-local function CheckStatus()
+function PartsMenu()
+    ClearMenu()
     local plate = QBCore.Functions.GetPlate(Config.Plates[ClosestPlate].AttachedVehicle)
-    SendStatusMessage(VehicleStatus[plate])
+    if VehicleStatus[plate] ~= nil then
+        for k, v in pairs(Config.ValuesLabels) do
+            if math.ceil(VehicleStatus[plate][k]) ~= Config.MaxStatusValues[k] then
+                local percentage = math.ceil(VehicleStatus[plate][k])
+                if percentage > 100 then
+                    percentage = math.ceil(VehicleStatus[plate][k]) / 10
+                end
+                Menu.addButton(v..": "..percentage.."%", "PartMenu", k)
+            else
+                local percentage = math.ceil(Config.MaxStatusValues[k])
+                if percentage > 100 then
+                    percentage = math.ceil(Config.MaxStatusValues[k]) / 10
+                end
+                Menu.addButton(v..": "..percentage.."%", "NoDamage", nil)
+            end
+        end
+    else
+        for k, v in pairs(Config.ValuesLabels) do
+            local percentage = math.ceil(Config.MaxStatusValues[k])
+            if percentage > 100 then
+                percentage = math.ceil(Config.MaxStatusValues[k]) / 10
+            end
+            Menu.addButton(v..": "..percentage.."%", "NoDamage", nil)
+        end
+    end
+    Menu.addButton("Back", "VehicleOptions", nil)
+    Menu.addButton("Close Menu", "CloseMenu", nil)
 end
 
-local function RepairPart(part)
+-- function CheckStatus()
+--     local plate = QBCore.Functions.GetPlate(Config.Plates[ClosestPlate].AttachedVehicle)
+--     SendStatusMessage(VehicleStatus[plate])
+-- end
+
+function PartMenu(part)
+    ClearMenu()
+    Menu.addButton("Repair ("..QBCore.Shared.Items[Config.RepairCostAmount[part].item]["label"].." "..Config.RepairCostAmount[part].costs.."x)", "RepairPart", part)
+    Menu.addButton("Back", "VehicleOptions", nil)
+    Menu.addButton("Close Menu", "CloseMenu", nil)
+end
+
+function NoDamage(part)
+    ClearMenu()
+    Menu.addButton("There Is No Damage To This Part!", "PartsMenu", part)
+    Menu.addButton("Back", "VehicleOptions", nil)
+    Menu.addButton("Close Menu", "CloseMenu", nil)
+end
+
+function RepairPart(part)
     local PartData = Config.RepairCostAmount[part]
     local hasitem = false
     local indx = 0
@@ -541,38 +430,7 @@ local function RepairPart(part)
     end, "mechanicstash")
 end
 
-
-
 -- Events
-RegisterNetEvent("qb-mechanicjob:client:UnattachVehicle",function(data)
-    UnattachVehicle()
-end)
-
-RegisterNetEvent("qb-mechanicjob:client:PartsMenu",function(data)
-    PartsMenu()
-end)
-
-RegisterNetEvent("qb-mechanicjob:client:PartMenu",function(data)
-    PartMenu(data)
-end)
-
-RegisterNetEvent("qb-mechanicjob:client:NoDamage",function(data)
-    NoDamage()
-end)
-
-RegisterNetEvent("qb-mechanicjob:client:CheckStatus",function(data)
-    CheckStatus()
-end)
-
-RegisterNetEvent("qb-mechanicjob:client:SpawnListVehicle",function(data)
-    local vehicleSpawnName=data.spawnName
-    SpawnListVehicle(vehicleSpawnName)
-end)
-
-RegisterNetEvent("qb-mechanicjob:client:RepairPart",function(data)
-    local partData = data.part
-    RepairPart(partData)
-end)
 
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     QBCore.Functions.GetPlayerData(function(PlayerData)
@@ -830,8 +688,10 @@ CreateThread(function()
                                 if IsControlJustPressed(0, 38) then
                                     if IsControlJustPressed(0, 38) then
                                         VehicleList()
+                                        Menu.hidden = not Menu.hidden
                                     end
                                 end
+                                Menu.renderGUI()
                             end
                         end
                     end
@@ -889,7 +749,9 @@ CreateThread(function()
                                 DrawText3Ds(v.coords.x, v.coords.y, v.coords.z, "[E] Open Menu")
                                 if IsControlJustPressed(0, 38) then
                                     OpenMenu()
+                                    Menu.hidden = not Menu.hidden
                                 end
+                                Menu.renderGUI()
                             end
                         end
                     end
